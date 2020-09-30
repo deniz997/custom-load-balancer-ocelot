@@ -9,6 +9,7 @@ using Ocelot.ServiceDiscovery.Providers;
 using Ocelot.Values;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace CustomLoadBalancerDemoApp
@@ -48,12 +49,12 @@ namespace CustomLoadBalancerDemoApp
 		{
 		}
 	}
-	public static class AppBuilderExtensions
+	public static class IOcelotBuilderExtensions
 	{
-		public static void AddRankingLoadBalancer(this IOcelotBuilder ocelot)
+		public static IOcelotBuilder AddRankingLoadBalancer(this IOcelotBuilder ocelot)
 		{
-			Func<IServiceProvider, DownstreamRoute, IServiceDiscoveryProvider, RankingLoadBalancer> loadBalancerFactoryFunc = (serviceProvider, Route, serviceDiscoveryProvider) => new RankingLoadBalancer(serviceDiscoveryProvider.Get);
-			ocelot.AddCustomLoadBalancer(loadBalancerFactoryFunc);
+			ocelot.AddCustomLoadBalancer((Route, serviceDiscoveryProvider) => new RankingLoadBalancer(serviceDiscoveryProvider.Get));
+			return ocelot;
 		}
 	}
 }
