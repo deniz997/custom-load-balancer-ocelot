@@ -1,6 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Ocelot.Configuration;
+using Ocelot.DependencyInjection;
 using Ocelot.LoadBalancer.LoadBalancers;
 using Ocelot.Responses;
+using Ocelot.ServiceDiscovery.Providers;
 using Ocelot.Values;
 using System;
 using System.Collections.Generic;
@@ -8,11 +13,11 @@ using System.Threading.Tasks;
 
 namespace CustomLoadBalancerDemoApp
 {
-    public class CustomLoadBalancer : ILoadBalancer
+    public class RankingLoadBalancer : ILoadBalancer
     {
 		private readonly Func<Task<List<Service>>> _services;
 		private int serviceIndexWithBiggestPort;
-		public CustomLoadBalancer(Func<Task<List<Service>>> services)
+		public RankingLoadBalancer(Func<Task<List<Service>>> services)
 		{
 			_services = services;
 
@@ -41,6 +46,14 @@ namespace CustomLoadBalancerDemoApp
 
 		public void Release(ServiceHostAndPort hostAndPort)
 		{
+		}
+	}
+	public static class AppBuilderExtensions
+	{
+		public static void AddRankingLoadBalancer(this IOcelotBuilder ocelot)
+		{
+			Func<IServiceProvider, DownstreamRoute, IServiceDiscoveryProvider, RankingLoadBalancer> loadBalancerFactoryFunc = (serviceProvider, Route, serviceDiscoveryProvider) => new RankingLoadBalancer(serviceDiscoveryProvider.Get);
+			ocelot.AddCustomLoadBalancer(loadBalancerFactoryFunc);
 		}
 	}
 }
